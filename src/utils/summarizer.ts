@@ -165,7 +165,7 @@ export class ArticleSummarizer {
       
       console.log('Article extracted successfully, generating summary...');
       
-      const model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       const prompt = `You are an expert editor for a classic newspaper. Your task is to create a concise, professional summary of the following article.
 

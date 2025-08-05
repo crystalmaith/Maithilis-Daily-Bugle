@@ -13,92 +13,144 @@ interface ArticleContent {
   error?: string;
 }
 
-// Article extraction service with multiple CORS proxy fallbacks
+// Article extraction service with comprehensive fallback system
 export class ArticleExtractor {
   static async extractContent(url: string): Promise<ArticleContent> {
-    console.log('Attempting to extract content from:', url);
+    console.log('🔍 Starting article extraction for:', url);
     
-    // Multiple CORS proxy services to try
-    const proxies = [
-      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-      `https://corsproxy.io/?${encodeURIComponent(url)}`,
-      `https://cors-anywhere.herokuapp.com/${url}`,
-    ];
-    
-    for (const [index, proxyUrl] of proxies.entries()) {
-      try {
-        console.log(`Trying proxy ${index + 1}:`, proxyUrl);
-        
-        const response = await fetch(proxyUrl, {
-          method: 'GET',
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          },
-        });
-        
-        if (!response.ok) {
-          console.log(`Proxy ${index + 1} failed with status:`, response.status);
-          continue;
-        }
-        
-        let html: string;
-        
-        // Handle different response formats from different proxies
-        if (index === 0) { // allorigins.win returns JSON
-          const data = await response.json();
-          html = data.contents;
-        } else { // other proxies return HTML directly
-          html = await response.text();
-        }
-        
-        if (!html || html.length < 100) {
-          console.log(`Proxy ${index + 1} returned insufficient content`);
-          continue;
-        }
-        
-        console.log(`Successfully fetched via proxy ${index + 1}, content length:`, html.length);
-        
-        // Parse and extract content
-        const result = this.parseArticleContent(html, url);
-        if (result.success) {
-          return result;
-        }
-        
-        console.log(`Content parsing failed for proxy ${index + 1}`);
-        
-      } catch (error) {
-        console.log(`Proxy ${index + 1} error:`, error);
-        continue;
-      }
+    // Validate URL format
+    try {
+      new URL(url);
+    } catch (error) {
+      return { 
+        success: false, 
+        error: 'Invalid URL format. Please check the URL and try again.' 
+      };
     }
     
-    // If all proxies fail, try direct fetch as last resort
-    try {
-      console.log('Trying direct fetch as last resort...');
-      const response = await fetch(url);
-      const html = await response.text();
-      return this.parseArticleContent(html, url);
-    } catch (error) {
-      console.log('Direct fetch also failed:', error);
+    // Multiple proxy services with different approaches
+    const extractionMethods = [
+      () => this.tryAllOriginsProxy(url),
+      () => this.tryCorsBridgeProxy(url),
+      () => this.tryThingProxyService(url),
+      () => this.tryDirectFetch(url),
+      () => this.trySimpleProxy(url)
+    ];
+    
+    for (const [index, method] of extractionMethods.entries()) {
+      try {
+        console.log(`🚀 Trying extraction method ${index + 1}/5...`);
+        const result = await method();
+        
+        if (result.success && result.content && result.content.length > 200) {
+          console.log(`✅ Success with method ${index + 1}!`);
+          return result;
+        } else {
+          console.log(`❌ Method ${index + 1} failed or returned insufficient content`);
+        }
+      } catch (error) {
+        console.log(`💥 Method ${index + 1} threw error:`, error);
+      }
     }
     
     return { 
       success: false, 
-      error: 'Unable to access the article. The website may be blocking requests or the URL may be invalid. Please try a different article URL.' 
+      error: 'Unable to extract article content. This could be due to:\n• Website blocking automated access\n• Paywall or login required\n• Content loaded dynamically\n\nTry using the TEXT input mode instead - copy and paste the article text directly.' 
     };
   }
   
+  // Method 1: AllOrigins proxy
+  static async tryAllOriginsProxy(url: string): Promise<ArticleContent> {
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)' }
+    });
+    
+    if (!response.ok) throw new Error(`AllOrigins failed: ${response.status}`);
+    
+    const data = await response.json();
+    return this.parseArticleContent(data.contents, url);
+  }
+  
+  // Method 2: CORS Bridge
+  static async tryCorsBridgeProxy(url: string): Promise<ArticleContent> {
+    const proxyUrl = `https://cors-anywhere.herokuapp.com/${url}`;
+    const response = await fetch(proxyUrl, {
+      headers: { 
+        'X-Requested-With': 'XMLHttpRequest',
+        'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)'
+      }
+    });
+    
+    if (!response.ok) throw new Error(`CORS Bridge failed: ${response.status}`);
+    
+    const html = await response.text();
+    return this.parseArticleContent(html, url);
+  }
+  
+  // Method 3: ThingProxy
+  static async tryThingProxyService(url: string): Promise<ArticleContent> {
+    const proxyUrl = `https://thingproxy.freeboard.io/fetch/${url}`;
+    const response = await fetch(proxyUrl);
+    
+    if (!response.ok) throw new Error(`ThingProxy failed: ${response.status}`);
+    
+    const html = await response.text();
+    return this.parseArticleContent(html, url);
+  }
+  
+  // Method 4: Direct fetch (might work for some sites)
+  static async tryDirectFetch(url: string): Promise<ArticleContent> {
+    const response = await fetch(url, {
+      mode: 'cors',
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)' }
+    });
+    
+    if (!response.ok) throw new Error(`Direct fetch failed: ${response.status}`);
+    
+    const html = await response.text();
+    return this.parseArticleContent(html, url);
+  }
+  
+  // Method 5: Simple proxy fallback
+  static async trySimpleProxy(url: string): Promise<ArticleContent> {
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
+    
+    if (!response.ok) throw new Error(`Simple proxy failed: ${response.status}`);
+    
+    const html = await response.text();
+    return this.parseArticleContent(html, url);
+  }
+  
+  
   static parseArticleContent(html: string, url: string): ArticleContent {
     try {
-      // Basic HTML parsing to extract text content
+      console.log('📄 Parsing HTML content, length:', html.length);
+      
+      // Check if we got an error page or blocked content
+      if (html.includes('Access Denied') || html.includes('403 Forbidden') || html.includes('Blocked')) {
+        return { 
+          success: false, 
+          error: 'Access denied by the website. Try the text input mode instead.' 
+        };
+      }
+      
+      // Parse HTML
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
       
-      // Remove script and style elements
-      const unwanted = doc.querySelectorAll('script, style, nav, header, footer, aside, .ad, .advertisement, .social-share, .comments, .sidebar, .related-articles');
+      // Remove unwanted elements
+      const unwanted = doc.querySelectorAll(`
+        script, style, nav, header, footer, aside, 
+        .ad, .advertisement, .social-share, .comments, 
+        .sidebar, .related-articles, .navigation,
+        [class*="ad"], [class*="banner"], [id*="ad"],
+        .popup, .modal, .overlay, .cookie-notice
+      `);
       unwanted.forEach(el => el.remove());
       
-      // Try to find the main content area
+      // Enhanced content selectors
       const contentSelectors = [
         'article',
         '[role="main"]',
@@ -106,6 +158,7 @@ export class ArticleExtractor {
         '.article-content',
         '.post-content',
         '.entry-content',
+        '.story-content',
         'main',
         '.story-body',
         '.article-body',
@@ -113,78 +166,104 @@ export class ArticleExtractor {
         '.content-body',
         '[class*="content"]',
         '[class*="article"]',
-        '[class*="story"]'
+        '[class*="story"]',
+        '[class*="post-text"]',
+        '[class*="body-text"]'
       ];
       
       let content = '';
       let title = '';
       
-      // Extract title
-      const titleSelectors = ['h1', '.title', '.headline', '.article-title', '.post-title', 'title'];
+      // Extract title with better selectors
+      const titleSelectors = [
+        'h1', 
+        '.title', 
+        '.headline', 
+        '.article-title', 
+        '.post-title',
+        '[class*="headline"]',
+        '[class*="title"]',
+        'title'
+      ];
+      
       for (const selector of titleSelectors) {
         const titleEl = doc.querySelector(selector);
         if (titleEl && titleEl.textContent) {
           title = titleEl.textContent.trim();
-          if (title.length > 10 && !title.toLowerCase().includes('404') && !title.toLowerCase().includes('error')) {
+          if (title.length > 10 && 
+              !title.toLowerCase().includes('404') && 
+              !title.toLowerCase().includes('error') &&
+              !title.toLowerCase().includes('access denied')) {
             break;
           }
         }
       }
       
-      console.log('Extracted title:', title);
+      console.log('📰 Extracted title:', title);
       
-      // Extract content
+      // Extract content with improved approach
       for (const selector of contentSelectors) {
-        const element = doc.querySelector(selector);
-        if (element) {
-          // Remove unwanted elements within the content
-          const innerUnwanted = element.querySelectorAll('script, style, .ad, .advertisement, .social-share, .comments, nav, aside, .sidebar');
+        const elements = doc.querySelectorAll(selector);
+        
+        for (const element of elements) {
+          // Remove ads and unwanted content within the element
+          const innerUnwanted = element.querySelectorAll(`
+            script, style, .ad, .advertisement, .social-share, 
+            .comments, nav, aside, .sidebar, [class*="ad"],
+            .author-bio, .related-posts, .newsletter-signup
+          `);
           innerUnwanted.forEach(el => el.remove());
           
-          content = element.textContent?.trim() || '';
-          console.log(`Content from ${selector}:`, content.length, 'characters');
-          if (content.length > 500) break; // Found substantial content
+          const elementText = element.textContent?.trim() || '';
+          if (elementText.length > content.length && elementText.length > 500) {
+            content = elementText;
+            console.log(`📝 Better content found via ${selector}:`, content.length, 'chars');
+          }
         }
+        
+        if (content.length > 1000) break; // We have good content
       }
       
-      // Fallback to paragraphs if no content area found
+      // Fallback to paragraphs if no main content found
       if (!content || content.length < 500) {
+        console.log('🔄 Falling back to paragraph extraction...');
         const paragraphs = Array.from(doc.querySelectorAll('p'))
           .map(p => p.textContent?.trim())
-          .filter(text => text && text.length > 50)
+          .filter(text => text && text.length > 50 && !text.includes('cookie') && !text.includes('subscribe'))
           .join(' ');
         
         if (paragraphs.length > content.length) {
           content = paragraphs;
-          console.log('Using paragraph fallback:', content.length, 'characters');
+          console.log('📄 Using paragraph fallback:', content.length, 'characters');
         }
       }
       
-      // Clean up the content
+      // Clean and process content
       content = content
-        .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-        .replace(/\n+/g, ' ') // Replace newlines with spaces
+        .replace(/\s+/g, ' ')
+        .replace(/\n+/g, ' ')
+        .replace(/[^\w\s.,!?;:()"'-]/g, ' ')
         .trim();
       
-      console.log('Final cleaned content:', content.length, 'characters');
+      console.log('✨ Final processed content:', content.length, 'characters');
       
       if (!content || content.length < 200) {
         return { 
           success: false, 
-          error: 'Could not extract meaningful content. The article might be behind a paywall or use dynamic loading.' 
+          error: 'Could not extract meaningful content. The article might be:\n• Behind a paywall\n• Loaded dynamically with JavaScript\n• Protected from automated access\n\nTry copying the text and using TEXT input mode.' 
         };
       }
       
       return { 
         success: true, 
-        content: content.slice(0, 10000), // Increased limit for better context
+        content: content.slice(0, 12000), // Increased limit
         title 
       };
     } catch (error) {
-      console.error('Content parsing failed:', error);
+      console.error('💥 Content parsing failed:', error);
       return { 
         success: false, 
-        error: 'Failed to parse the article content.' 
+        error: 'Failed to parse the article content. Try the text input mode.' 
       };
     }
   }

@@ -8,33 +8,49 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Newspaper theme - classic black and white */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 5%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 97%;
+    --card-foreground: 0 0% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 5%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 0 0% 90%;
+    --secondary-foreground: 0 0% 9%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 0 0% 88%;
+    --accent-foreground: 0 0% 15%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 0 0% 85%;
+    --input: 0 0% 94%;
+    --ring: 0 0% 15%;
+
+    /* Newspaper design tokens */
+    --paper-texture: 45 15% 96%;
+    --ink-dark: 0 0% 12%;
+    --ink-medium: 0 0% 35%;
+    --newsprint-shadow: 0 0% 0% / 0.15;
+    --vintage-border: 0 0% 75%;
+    
+    /* Gradients for paper effect */
+    --paper-gradient: linear-gradient(135deg, hsl(var(--paper-texture)), hsl(45 10% 94%));
+    --ink-gradient: linear-gradient(180deg, hsl(var(--ink-dark)), hsl(var(--ink-medium)));
+    
+    /* Shadows for vintage effect */
+    --paper-shadow: 0 2px 8px hsl(var(--newsprint-shadow)), 0 4px 16px hsl(var(--newsprint-shadow));
+    --text-shadow: 1px 1px 2px hsl(var(--newsprint-shadow));
 
     --radius: 0.5rem;
 

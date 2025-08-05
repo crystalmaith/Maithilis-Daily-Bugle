@@ -18,6 +18,10 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'newspaper': ['Playfair Display', 'Georgia', 'serif'],
+				'serif': ['Georgia', 'Times New Roman', 'serif'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -61,7 +65,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				/* Newspaper design tokens */
+				'paper-texture': 'hsl(var(--paper-texture))',
+				'ink-dark': 'hsl(var(--ink-dark))',
+				'ink-medium': 'hsl(var(--ink-medium))',
+				'vintage-border': 'hsl(var(--vintage-border))',
+			},
+			backgroundImage: {
+				'paper-gradient': 'var(--paper-gradient)',
+				'ink-gradient': 'var(--ink-gradient)',
+			},
+			boxShadow: {
+				'paper': 'var(--paper-shadow)',
+				'text': 'var(--text-shadow)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +101,22 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'typewriter': {
+					'0%': { width: '0', opacity: '0' },
+					'1%': { opacity: '1' },
+					'100%': { width: '100%', opacity: '1' }
+				},
+				'fade-in-text': {
+					'0%': { opacity: '0', transform: 'translateY(10px)' },
+					'100%': { opacity: '1', transform: 'translateY(0)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'typewriter': 'typewriter 2s steps(60) forwards',
+				'fade-in-text': 'fade-in-text 0.5s ease-out forwards'
 			}
 		}
 	},

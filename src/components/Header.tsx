@@ -36,7 +36,7 @@ export const Header = ({ isDarkMode, onToggleDarkMode }: HeaderProps) => {
           </h1>
           <div className="h-1 bg-ink-dark mx-auto mt-2 mb-3"></div>
           <p className="text-lg font-serif text-ink-medium italic">
-            ESTABLISHED 2025 • AI-POWERED NEWS SUMMARIZATION
+            ESTABLISHED 2025 • MAITHILI's AI POWERED NEWS SUMMARIZER
           </p>
         </div>
         

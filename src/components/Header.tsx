@@ -10,13 +10,13 @@ export const Header = ({ isDarkMode, onToggleDarkMode }: HeaderProps) => {
   return (
     <header className="relative overflow-hidden">
       {/* Header Image */}
-      <div className="relative h-32 md:h-40 bg-paper-gradient shadow-paper border-b border-vintage-border">
+      <div className="relative h-40 md:h-48 bg-paper-gradient shadow-paper border-b border-vintage-border flex items-center justify-center">
         <img 
           src={headerImage} 
           alt="The Daily Bugle" 
-          className={`w-full h-full object-cover ${isDarkMode ? 'opacity-80 filter invert' : 'opacity-90'}`}
+          className={`max-w-full max-h-full object-contain ${isDarkMode ? 'opacity-80 filter invert' : 'opacity-90'}`}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/10 pointer-events-none"></div>
       </div>
       
       {/* Dark Mode Toggle */}

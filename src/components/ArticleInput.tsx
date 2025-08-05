@@ -37,51 +37,56 @@ export const ArticleInput = ({ onSummarize, isLoading }: ArticleInputProps) => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6">
-      <div className="bg-paper-gradient rounded-lg shadow-paper border border-vintage-border p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Newspaper className="w-6 h-6 text-ink-dark" />
-          <h2 className="text-xl font-newspaper font-bold text-ink-dark">
-            Submit Article for Summary
-          </h2>
+    <div className="border-2 border-ink-dark bg-background p-6">
+      {/* Newspaper section header */}
+      <div className="border-b-2 border-ink-dark pb-3 mb-6">
+        <h3 className="text-xl font-newspaper font-bold text-ink-dark text-center">
+          ARTICLE SUBMISSION DESK
+        </h3>
+        <div className="flex items-center justify-center gap-2 mt-2">
+          <div className="h-px bg-ink-dark flex-1"></div>
+          <Newspaper className="w-4 h-4 text-ink-dark" />
+          <div className="h-px bg-ink-dark flex-1"></div>
+        </div>
+      </div>
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="article-url" className="block text-sm font-serif font-bold text-ink-dark mb-2 uppercase tracking-wide">
+            News Article URL:
+          </label>
+          <Input
+            id="article-url"
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://example.com/news-article"
+            className="font-serif bg-background border-2 border-ink-dark focus:ring-ink-dark text-ink-dark"
+            disabled={isLoading}
+          />
         </div>
         
-        <form onSubmit={handleSubmit} className="flex gap-4 items-end">
-          <div className="flex-1">
-            <label htmlFor="article-url" className="block text-sm font-serif text-ink-medium mb-2">
-              Article URL
-            </label>
-            <Input
-              id="article-url"
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com/news-article"
-              className="font-serif bg-background border-vintage-border focus:ring-ink-dark"
-              disabled={isLoading}
-            />
-          </div>
-          
+        <div className="flex justify-center">
           <Button 
             type="submit" 
             disabled={isLoading || !url.trim()}
-            className="bg-ink-dark hover:bg-ink-medium text-primary-foreground font-serif px-8 py-2 h-10"
+            className="bg-ink-dark hover:bg-ink-medium text-background font-serif px-8 py-3 text-lg font-bold uppercase tracking-wide border-2 border-ink-dark"
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Processing...
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Processing Story...
               </>
             ) : (
-              'Summarize'
+              'Generate Summary'
             )}
           </Button>
-        </form>
+        </div>
         
-        <p className="text-xs text-ink-medium mt-3 font-serif">
-          Enter any news article URL to generate a concise 60-word summary in classic editorial style.
+        <p className="text-xs text-ink-medium text-center font-serif border-t border-ink-dark pt-3 italic">
+          Enter any news article URL to generate a concise 60-word summary in classic editorial style
         </p>
-      </div>
+      </form>
     </div>
   );
 };

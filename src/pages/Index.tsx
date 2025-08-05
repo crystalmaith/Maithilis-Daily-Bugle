@@ -144,35 +144,51 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-paper-gradient">
       <Header isDarkMode={isDarkMode} onToggleDarkMode={handleToggleDarkMode} />
       
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        {!apiKey ? (
-          <ApiKeyInput onApiKeySet={handleApiKeySet} hasApiKey={!!apiKey} />
-        ) : (
-          <>
-            <ArticleInput onSummarize={handleSummarize} isLoading={isLoading} />
-            
-            <SummaryDisplay
-              summary={currentSummary}
-              originalUrl={currentUrl}
-              isVisible={!!currentSummary}
-              onSaveToArchive={handleSaveToArchive}
-            />
-            
-            <Archive 
-              entries={archive}
-              onDeleteEntry={handleDeleteFromArchive}
-            />
-          </>
-        )}
+      {/* Newspaper Content Area */}
+      <main className="max-w-6xl mx-auto bg-paper-gradient border-l-2 border-r-2 border-ink-dark min-h-screen">
+        {/* Content columns like a real newspaper */}
+        <div className="border-b-2 border-ink-dark p-6">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-newspaper font-bold text-ink-dark border-b border-ink-dark inline-block px-4 pb-1">
+              NEWS DIGEST SERVICE
+            </h2>
+            <p className="text-ink-medium font-serif mt-2 italic">
+              Submit any article URL for instant 60-word editorial summary
+            </p>
+          </div>
+          
+          {!apiKey ? (
+            <ApiKeyInput onApiKeySet={handleApiKeySet} hasApiKey={!!apiKey} />
+          ) : (
+            <div className="space-y-8">
+              <ArticleInput onSummarize={handleSummarize} isLoading={isLoading} />
+              
+              {currentSummary && (
+                <SummaryDisplay
+                  summary={currentSummary}
+                  originalUrl={currentUrl}
+                  isVisible={!!currentSummary}
+                  onSaveToArchive={handleSaveToArchive}
+                />
+              )}
+              
+              <Archive 
+                entries={archive}
+                onDeleteEntry={handleDeleteFromArchive}
+              />
+            </div>
+          )}
+        </div>
       </main>
       
-      <footer className="border-t border-vintage-border bg-paper-gradient py-6">
-        <div className="container mx-auto px-4 text-center">
+      {/* Newspaper Footer */}
+      <footer className="max-w-6xl mx-auto bg-paper-gradient border-2 border-t-0 border-ink-dark">
+        <div className="border-t-2 border-ink-dark p-4 text-center">
           <p className="text-ink-medium font-serif text-sm">
-            © 2024 The Daily Bugle - Classic Journalism, Modern Technology
+            © 2025 The Daily Bugle • All Rights Reserved • Published Daily in the Digital Age
           </p>
         </div>
       </footer>

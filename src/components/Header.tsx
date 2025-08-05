@@ -46,14 +46,14 @@ export const Header = ({ isDarkMode, onToggleDarkMode }: HeaderProps) => {
         </div>
       </div>
       
-      {/* Dark Mode Toggle */}
+      /* Dark Mode Toggle 
       <button
         onClick={onToggleDarkMode}
         className="absolute top-4 right-4 p-2 rounded bg-ink-dark text-background hover:bg-ink-medium transition-colors text-sm font-serif"
         title="Toggle vintage newsprint mode"
       >
         {isDarkMode ? '☀️ Light' : '🌙 Dark'}
-      </button>
+      </button>*/
     </header>
   );
 };

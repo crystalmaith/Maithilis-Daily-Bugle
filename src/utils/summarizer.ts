@@ -282,68 +282,6 @@ export class ArticleSummarizer {
     this.genAI = new GoogleGenerativeAI(apiKey);
   }
   
-  
-  async summarizeText(text: string): Promise<SummaryResult> {
-    if (!this.genAI) {
-      return { 
-        success: false, 
-        error: 'API key not configured. Please set your Gemini API key.' 
-      };
-    }
-    
-    try {
-      console.log('Starting direct text summarization...');
-      
-      if (!text || text.length < 100) {
-        return { 
-          success: false, 
-          error: 'Text is too short. Please provide at least 100 characters.' 
-        };
-      }
-      
-      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      
-      const prompt = `You are an expert editor for a classic newspaper. Your task is to create a concise, professional summary of the following text.
-
-Requirements:
-- Write exactly 60 words
-- Use clear, concise English in a classic newspaper editorial tone
-- Focus on the most important facts and key points
-- Write in third person
-- Maintain journalistic objectivity
-- No sensationalism or opinion
-
-Text Content:
-${text.slice(0, 10000)}
-
-Provide only the 60-word summary, nothing else.`;
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const summary = response.text().trim();
-      
-      console.log('Summary generated from text:', summary);
-      
-      if (!summary) {
-        return { 
-          success: false, 
-          error: 'Failed to generate summary - empty response from AI' 
-        };
-      }
-      
-      return { 
-        success: true, 
-        summary 
-      };
-    } catch (error) {
-      console.error('Text summarization error:', error);
-      return { 
-        success: false, 
-        error: `Text summarization failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      };
-    }
-  }
-
   async summarizeArticle(url: string): Promise<SummaryResult> {
     if (!this.genAI) {
       return { 
@@ -353,23 +291,76 @@ Provide only the 60-word summary, nothing else.`;
     }
     
     try {
-      console.log('Starting summarization process for:', url);
+      console.log('🚀 Starting summarization process for:', url);
       
       // Extract article content
       const extraction = await ArticleExtractor.extractContent(url);
       if (!extraction.success || !extraction.content) {
-        console.error('Article extraction failed:', extraction.error);
+        console.error('❌ Article extraction failed:', extraction.error);
         return { 
           success: false, 
           error: extraction.error || 'Failed to extract article content' 
         };
       }
       
-      console.log('Article extracted successfully, generating summary...');
+      console.log('✅ Article extracted successfully, generating summary...');
       
-      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      // Try summarization with retry logic
+      return await this.generateSummaryWithRetry(extraction.content, extraction.title);
       
-      const prompt = `You are an expert editor for a classic newspaper. Your task is to create a concise, professional summary of the following article.
+    } catch (error) {
+      console.error('💥 Summarization error:', error);
+      return { 
+        success: false, 
+        error: `Summarization failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      };
+    }
+  }
+
+  async summarizeText(text: string): Promise<SummaryResult> {
+    if (!this.genAI) {
+      return { 
+        success: false, 
+        error: 'API key not configured. Please set your Gemini API key.' 
+      };
+    }
+    
+    try {
+      console.log('🚀 Starting direct text summarization...');
+      
+      if (!text || text.length < 100) {
+        return { 
+          success: false, 
+          error: 'Text is too short. Please provide at least 100 characters.' 
+        };
+      }
+      
+      // Try summarization with retry logic
+      return await this.generateSummaryWithRetry(text.slice(0, 10000));
+      
+    } catch (error) {
+      console.error('💥 Text summarization error:', error);
+      return { 
+        success: false, 
+        error: `Text summarization failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      };
+    }
+  }
+
+  private async generateSummaryWithRetry(content: string, title?: string): Promise<SummaryResult> {
+    const models = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'];
+    const maxRetries = 3;
+    
+    for (const modelName of models) {
+      console.log(`🤖 Trying model: ${modelName}`);
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`🔄 Attempt ${attempt}/${maxRetries} with ${modelName}...`);
+          
+          const model = this.genAI!.getGenerativeModel({ model: modelName });
+          
+          const prompt = `You are an expert editor for a classic newspaper. Your task is to create a concise, professional summary of the following article.
 
 Requirements:
 - Write exactly 60 words
@@ -379,36 +370,54 @@ Requirements:
 - Maintain journalistic objectivity
 - No sensationalism or opinion
 
-Article Title: ${extraction.title || 'Unknown Title'}
-
-Article Content:
-${extraction.content}
+${title ? `Article Title: ${title}\n\n` : ''}Article Content:
+${content}
 
 Provide only the 60-word summary, nothing else.`;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const summary = response.text().trim();
-      
-      console.log('Summary generated:', summary);
-      
-      if (!summary) {
-        return { 
-          success: false, 
-          error: 'Failed to generate summary - empty response from AI' 
-        };
+          const result = await model.generateContent(prompt);
+          const response = await result.response;
+          const summary = response.text().trim();
+          
+          console.log(`✅ Summary generated successfully with ${modelName}:`, summary);
+          
+          if (!summary) {
+            throw new Error('Empty response from AI');
+          }
+          
+          return { 
+            success: true, 
+            summary 
+          };
+          
+        } catch (error: any) {
+          console.log(`⚠️ Attempt ${attempt} failed with ${modelName}:`, error.message);
+          
+          // Check if it's an overload error (503)
+          if (error.message?.includes('overloaded') || error.message?.includes('503')) {
+            console.log(`⏳ Model ${modelName} is overloaded, waiting before retry...`);
+            
+            if (attempt < maxRetries) {
+              // Exponential backoff: 2s, 4s, 8s
+              const delay = Math.pow(2, attempt) * 1000;
+              await new Promise(resolve => setTimeout(resolve, delay));
+              continue;
+            } else {
+              console.log(`🔄 Max retries reached for ${modelName}, trying next model...`);
+              break; // Try next model
+            }
+          } else {
+            // Non-overload error, try next model immediately
+            console.log(`❌ Non-overload error with ${modelName}, trying next model...`);
+            break;
+          }
+        }
       }
-      
-      return { 
-        success: true, 
-        summary 
-      };
-    } catch (error) {
-      console.error('Summarization error:', error);
-      return { 
-        success: false, 
-        error: `Summarization failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      };
     }
+    
+    return { 
+      success: false, 
+      error: 'Google AI services are currently overloaded. This is a temporary issue on Google\'s servers.\n\n🔄 Please try again in a few minutes\n⏰ Peak hours often have higher traffic\n💡 You can also try using the TEXT input mode which sometimes works better during high traffic periods' 
+    };
   }
 }

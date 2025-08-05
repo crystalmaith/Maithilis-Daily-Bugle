@@ -100,11 +100,18 @@ const Index = () => {
       if (result.success && result.summary) {
         setCurrentSummary(result.summary);
         setCurrentUrl(url);
-      } else {
         toast({
-          title: "URL Extraction Failed",
-          description: `${result.error || "Unable to process the article."} Try using the text input option instead.`,
+          title: "Success!",
+          description: "Article summarized successfully",
+        });
+      } else {
+        const isOverloadError = result.error?.includes('overloaded') || result.error?.includes('503');
+        
+        toast({
+          title: isOverloadError ? "⏳ Google AI Overloaded" : "📄 URL Extraction Failed",
+          description: result.error || "Unable to process the article.",
           variant: "destructive",
+          duration: isOverloadError ? 8000 : 5000, // Longer duration for overload messages
         });
         setCurrentSummary('');
         setCurrentUrl('');
@@ -143,11 +150,18 @@ const Index = () => {
       if (result.success && result.summary) {
         setCurrentSummary(result.summary);
         setCurrentUrl('direct-text');
-      } else {
         toast({
-          title: "Text Summarization Failed",
+          title: "Success!",
+          description: "Text summarized successfully",
+        });
+      } else {
+        const isOverloadError = result.error?.includes('overloaded') || result.error?.includes('503');
+        
+        toast({
+          title: isOverloadError ? "⏳ Google AI Overloaded" : "📝 Text Processing Failed",
           description: result.error || "Unable to process the text.",
           variant: "destructive",
+          duration: isOverloadError ? 8000 : 5000,
         });
         setCurrentSummary('');
         setCurrentUrl('');

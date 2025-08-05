@@ -203,6 +203,68 @@ export class ArticleSummarizer {
     this.genAI = new GoogleGenerativeAI(apiKey);
   }
   
+  
+  async summarizeText(text: string): Promise<SummaryResult> {
+    if (!this.genAI) {
+      return { 
+        success: false, 
+        error: 'API key not configured. Please set your Gemini API key.' 
+      };
+    }
+    
+    try {
+      console.log('Starting direct text summarization...');
+      
+      if (!text || text.length < 100) {
+        return { 
+          success: false, 
+          error: 'Text is too short. Please provide at least 100 characters.' 
+        };
+      }
+      
+      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      const prompt = `You are an expert editor for a classic newspaper. Your task is to create a concise, professional summary of the following text.
+
+Requirements:
+- Write exactly 60 words
+- Use clear, concise English in a classic newspaper editorial tone
+- Focus on the most important facts and key points
+- Write in third person
+- Maintain journalistic objectivity
+- No sensationalism or opinion
+
+Text Content:
+${text.slice(0, 10000)}
+
+Provide only the 60-word summary, nothing else.`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const summary = response.text().trim();
+      
+      console.log('Summary generated from text:', summary);
+      
+      if (!summary) {
+        return { 
+          success: false, 
+          error: 'Failed to generate summary - empty response from AI' 
+        };
+      }
+      
+      return { 
+        success: true, 
+        summary 
+      };
+    } catch (error) {
+      console.error('Text summarization error:', error);
+      return { 
+        success: false, 
+        error: `Text summarization failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      };
+    }
+  }
+
   async summarizeArticle(url: string): Promise<SummaryResult> {
     if (!this.genAI) {
       return { 

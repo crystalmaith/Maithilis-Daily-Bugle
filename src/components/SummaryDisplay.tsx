@@ -103,19 +103,21 @@ export const SummaryDisplay = ({ summary, originalUrl, isVisible, onSaveToArchiv
       </div>
 
       {/* Source information */}
-      <div className="border-t border-ink-dark pt-4 mb-4">
-        <p className="text-sm text-ink-medium font-serif">
-          <span className="font-bold uppercase tracking-wide">Source:</span>{' '}
-          <a 
-            href={originalUrl} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="underline hover:text-ink-dark transition-colors font-medium"
-          >
-            {new URL(originalUrl).hostname}
-          </a>
-        </p>
-      </div>
+      {originalUrl !== 'direct-text' && (
+        <div className="border-t border-ink-dark pt-4 mb-4">
+          <p className="text-sm text-ink-medium font-serif">
+            <span className="font-bold uppercase tracking-wide">Source:</span>{' '}
+            <a 
+              href={originalUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="underline hover:text-ink-dark transition-colors font-medium"
+            >
+              {new URL(originalUrl).hostname}
+            </a>
+          </p>
+        </div>
+      )}
 
       {/* Action buttons */}
       <div className="flex gap-3 justify-center border-t border-ink-dark pt-4">

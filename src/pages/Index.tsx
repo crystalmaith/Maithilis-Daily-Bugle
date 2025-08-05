@@ -79,7 +79,7 @@ const Index = () => {
     });
   };
 
-  // Summarize article
+  // Summarize article from URL
   const handleSummarize = async (url: string) => {
     if (!summarizer) {
       toast({
@@ -102,8 +102,51 @@ const Index = () => {
         setCurrentUrl(url);
       } else {
         toast({
-          title: "Summarization Failed",
-          description: result.error || "Unable to process the article.",
+          title: "URL Extraction Failed",
+          description: `${result.error || "Unable to process the article."} Try using the text input option instead.`,
+          variant: "destructive",
+        });
+        setCurrentSummary('');
+        setCurrentUrl('');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Try the text input option.",
+        variant: "destructive",
+      });
+      setCurrentSummary('');
+      setCurrentUrl('');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Summarize text directly
+  const handleSummarizeText = async (text: string) => {
+    if (!summarizer) {
+      toast({
+        title: "Error",
+        description: "Please configure your API key first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setCurrentSummary('');
+    setCurrentUrl('direct-text');
+
+    try {
+      const result = await summarizer.summarizeText(text);
+      
+      if (result.success && result.summary) {
+        setCurrentSummary(result.summary);
+        setCurrentUrl('direct-text');
+      } else {
+        toast({
+          title: "Text Summarization Failed",
+          description: result.error || "Unable to process the text.",
           variant: "destructive",
         });
         setCurrentSummary('');
@@ -127,7 +170,7 @@ const Index = () => {
     const newEntry: ArchiveEntry = {
       id: Date.now().toString(),
       summary,
-      url,
+      url: url === 'direct-text' ? 'Direct Text Input' : url,
       timestamp: new Date(),
     };
 
@@ -164,7 +207,7 @@ const Index = () => {
             <ApiKeyInput onApiKeySet={handleApiKeySet} hasApiKey={!!apiKey} />
           ) : (
             <div className="space-y-8">
-              <ArticleInput onSummarize={handleSummarize} isLoading={isLoading} />
+              <ArticleInput onSummarize={handleSummarize} onSummarizeText={handleSummarizeText} isLoading={isLoading} />
               
               {currentSummary && (
                 <SummaryDisplay

@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 
 interface SummaryResult {
   success: boolean;
@@ -270,23 +270,29 @@ export class ArticleExtractor {
 }
 
 export class ArticleSummarizer {
-  private genAI: GoogleGenerativeAI | null = null;
+  private openai: OpenAI | null = null;
   
   constructor(apiKey?: string) {
     if (apiKey) {
-      this.genAI = new GoogleGenerativeAI(apiKey);
+      this.openai = new OpenAI({ 
+        apiKey,
+        dangerouslyAllowBrowser: true 
+      });
     }
   }
   
   setApiKey(apiKey: string) {
-    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.openai = new OpenAI({ 
+      apiKey,
+      dangerouslyAllowBrowser: true 
+    });
   }
   
   async summarizeArticle(url: string): Promise<SummaryResult> {
-    if (!this.genAI) {
+    if (!this.openai) {
       return { 
         success: false, 
-        error: 'API key not configured. Please set your Gemini API key.' 
+        error: 'API key not configured. Please set your OpenAI API key.' 
       };
     }
     
@@ -318,10 +324,10 @@ export class ArticleSummarizer {
   }
 
   async summarizeText(text: string): Promise<SummaryResult> {
-    if (!this.genAI) {
+    if (!this.openai) {
       return { 
         success: false, 
-        error: 'API key not configured. Please set your Gemini API key.' 
+        error: 'API key not configured. Please set your OpenAI API key.' 
       };
     }
     
@@ -348,7 +354,7 @@ export class ArticleSummarizer {
   }
 
   private async generateSummaryWithRetry(content: string, title?: string): Promise<SummaryResult> {
-    const models = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'];
+    const models = ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'];
     const maxRetries = 3;
     
     for (const modelName of models) {
@@ -357,8 +363,6 @@ export class ArticleSummarizer {
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
           console.log(`🔄 Attempt ${attempt}/${maxRetries} with ${modelName}...`);
-          
-          const model = this.genAI!.getGenerativeModel({ model: modelName });
           
           const prompt = `You are an expert editor for a classic newspaper. Your task is to create a concise, professional summary of the following article.
 
@@ -375,9 +379,16 @@ ${content}
 
 Provide only the 60-word summary, nothing else.`;
 
-          const result = await model.generateContent(prompt);
-          const response = await result.response;
-          const summary = response.text().trim();
+          const completion = await this.openai!.chat.completions.create({
+            model: modelName,
+            messages: [
+              { role: 'user', content: prompt }
+            ],
+            max_tokens: 150,
+            temperature: 0.3
+          });
+          
+          const summary = completion.choices[0]?.message?.content?.trim();
           
           console.log(`✅ Summary generated successfully with ${modelName}:`, summary);
           
@@ -393,9 +404,9 @@ Provide only the 60-word summary, nothing else.`;
         } catch (error: any) {
           console.log(`⚠️ Attempt ${attempt} failed with ${modelName}:`, error.message);
           
-          // Check if it's an overload error (503)
-          if (error.message?.includes('overloaded') || error.message?.includes('503')) {
-            console.log(`⏳ Model ${modelName} is overloaded, waiting before retry...`);
+          // Check if it's a rate limit or overload error
+          if (error.message?.includes('rate limit') || error.message?.includes('overloaded') || error.status === 429) {
+            console.log(`⏳ Model ${modelName} is rate limited, waiting before retry...`);
             
             if (attempt < maxRetries) {
               // Exponential backoff: 2s, 4s, 8s
@@ -407,8 +418,8 @@ Provide only the 60-word summary, nothing else.`;
               break; // Try next model
             }
           } else {
-            // Non-overload error, try next model immediately
-            console.log(`❌ Non-overload error with ${modelName}, trying next model...`);
+            // Non-rate-limit error, try next model immediately
+            console.log(`❌ Non-rate-limit error with ${modelName}, trying next model...`);
             break;
           }
         }
@@ -417,7 +428,7 @@ Provide only the 60-word summary, nothing else.`;
     
     return { 
       success: false, 
-      error: 'Google AI services are currently overloaded. This is a temporary issue on Google\'s servers.\n\n🔄 Please try again in a few minutes\n⏰ Peak hours often have higher traffic\n💡 You can also try using the TEXT input mode which sometimes works better during high traffic periods' 
+      error: 'OpenAI services are temporarily unavailable. This could be due to rate limits or server issues.\n\n🔄 Please try again in a few minutes\n⏰ Peak hours often have higher traffic\n💡 Consider upgrading your OpenAI plan for higher rate limits' 
     };
   }
 }

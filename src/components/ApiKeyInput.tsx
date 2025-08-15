@@ -48,20 +48,20 @@ export const ApiKeyInput = ({ onApiKeySet, hasApiKey }: ApiKeyInputProps) => {
 
       <div className="text-center mb-6">
         <p className="text-ink-medium font-serif">
-          Enter your Google Gemini API key to enable article summarization service.
+          Enter your OpenAI API key to enable article summarization service.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="relative">
           <label className="block text-sm font-serif font-bold text-ink-dark mb-2 uppercase tracking-wide">
-            Gemini API Key:
+            OpenAI API Key:
           </label>
           <Input
             type={showKey ? 'text' : 'password'}
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Enter your Gemini API key..."
+            placeholder="Enter your OpenAI API key..."
             className="font-serif bg-background border-2 border-ink-dark focus:ring-ink-dark pr-12"
           />
           <Button
@@ -91,14 +91,14 @@ export const ApiKeyInput = ({ onApiKeySet, hasApiKey }: ApiKeyInputProps) => {
           How to obtain API key:
         </h4>
         <ol className="text-sm text-ink-medium font-serif space-y-1 list-decimal list-inside">
-          <li>Visit Google AI Studio</li>
-          <li>Sign in with your Google account</li>
+          <li>Visit OpenAI Platform</li>
+          <li>Sign in to your OpenAI account</li>
           <li>Create a new API key</li>
           <li>Copy and paste it above</li>
         </ol>
         
         <a
-          href="https://aistudio.google.com/app/apikey"
+          href="https://platform.openai.com/api-keys"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 mt-3 text-ink-dark hover:text-ink-medium transition-colors underline font-serif font-bold"

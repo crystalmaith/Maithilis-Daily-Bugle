@@ -79,6 +79,20 @@ const Index = () => {
     });
   };
 
+  // Clear API key (back to setup)
+  const handleClearApiKey = () => {
+    setApiKey('');
+    localStorage.removeItem('daily-bugle-api-key');
+    setSummarizer(null);
+    setCurrentSummary('');
+    setCurrentUrl('');
+    
+    toast({
+      title: "API Key Cleared",
+      description: "You can now enter a new API key",
+    });
+  };
+
   // Summarize article from URL
   const handleSummarize = async (url: string) => {
     if (!summarizer) {
@@ -108,7 +122,7 @@ const Index = () => {
         const isOverloadError = result.error?.includes('overloaded') || result.error?.includes('503');
         
         toast({
-          title: isOverloadError ? "⏳ Google AI Overloaded" : "📄 URL Extraction Failed",
+          title: isOverloadError ? "⏳ OpenAI Rate Limited" : "📄 URL Extraction Failed",
           description: result.error || "Unable to process the article.",
           variant: "destructive",
           duration: isOverloadError ? 8000 : 5000, // Longer duration for overload messages
@@ -158,7 +172,7 @@ const Index = () => {
         const isOverloadError = result.error?.includes('overloaded') || result.error?.includes('503');
         
         toast({
-          title: isOverloadError ? "⏳ Google AI Overloaded" : "📝 Text Processing Failed",
+          title: isOverloadError ? "⏳ OpenAI Rate Limited" : "📝 Text Processing Failed",
           description: result.error || "Unable to process the text.",
           variant: "destructive",
           duration: isOverloadError ? 8000 : 5000,
@@ -221,6 +235,20 @@ const Index = () => {
             <ApiKeyInput onApiKeySet={handleApiKeySet} hasApiKey={!!apiKey} />
           ) : (
             <div className="space-y-8">
+              {/* API Key Management Header */}
+              <div className="flex justify-between items-center border-b border-ink-dark pb-4">
+                <div>
+                  <h3 className="font-serif font-bold text-ink-dark">API Service Active</h3>
+                  <p className="text-sm text-ink-medium font-serif">OpenAI summarization service configured</p>
+                </div>
+                <button
+                  onClick={handleClearApiKey}
+                  className="text-sm font-serif text-ink-medium hover:text-ink-dark border border-ink-dark px-3 py-1 hover:bg-ink-dark hover:text-background transition-colors"
+                >
+                  Change API Key
+                </button>
+              </div>
+              
               <ArticleInput onSummarize={handleSummarize} onSummarizeText={handleSummarizeText} isLoading={isLoading} />
               
               {currentSummary && (
